@@ -62,7 +62,7 @@ child_data %>%
 
 ```{r}
 cv_df = 
-  crossv_mc(child_data, 100) 
+  crossv_mc(child_data, 50) 
 
 cv_df %>% pull(train) %>% .[[3]] %>% as_tibble
 
@@ -74,11 +74,29 @@ cv_df =
 
 cv_df = 
   cv_df %>% 
-  mutate(linear_mod  = map(train, ~lm(bwt ~ babysex + bhead + blength + delwt + gaweeks + mrace + parity + smoken, data = child_data)),
+  mutate(linear_mod = map(train, ~lm(bwt ~ babysex + bhead + blength + delwt + gaweeks + mrace + parity + smoken, data = child_data)),
          main_mod = map(train, ~lm(bwt ~ blength + gaweeks, data = child_data)),
-         inter_mod = map(train, ~lm(bwt ~ bhead * blength * babysex, data = child_data)))
+         inter_mod = map(train, ~lm(bwt ~ bhead * blength * babysex, data = child_data)),
+          rmse_linear = map2_dbl(.x = linear_mod, .y = test, ~rmse(.x, .y)),
+    rmse_main = map2_dbl(.x = main_mod, .y = test, ~rmse(.x, .y)),
+    rmse_inter = map2_dbl(inter_mod, test, ~rmse(model = .x, data = .y)))
 ```
 
+
+```{r}
+cv_result = cv_df %>% 
+  select(rmse_linear, rmse_main, rmse_inter) %>% 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  as_tibble()
+
+
+  ggplot(data = cv_result,aes(x = model, y = rmse)) + geom_violin()
+```
 
 
 
