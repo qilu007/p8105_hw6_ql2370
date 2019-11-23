@@ -7,12 +7,35 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(dplyr)
+
 ```
 
 ## Problem 1
 ```{r}
 child_data = read.csv(file = "./data/birthweight.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(
+    babysex = as.factor(babysex),
+    frace = as.factor(frace),
+    malform = as.factor(malform),
+    mrace = as.factor(mrace)
+  ) %>% 
+  drop_na()
+ 
+  
+#child_data = map(child_data, as.factor) %>% 
+#  as.tibble()
 ```
+  
+  Fit a linear model 
+```{r}
+bwt_lm = lm(bwt ~ ., data = child_data)
+summary(bwt_lm)
+```
+
+
+
+
 
 
