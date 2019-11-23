@@ -8,6 +8,7 @@ output: github_document
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(dplyr)
+library(modelr)
 
 ```
 
@@ -59,6 +60,12 @@ child_data %>%
 ```
 
 
+```{r}
+cv_df = 
+  crossv_mc(child_data, 100) 
+
+cv_df %>% pull(train) %>% .[[3]] %>% as_tibble
+```
 
 
 
