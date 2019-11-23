@@ -49,7 +49,14 @@ Therefore, we reject the null hypothesis. mom's race and parity can be included 
 ```{r}
 summary(bwt_lm)
 ```
+Showing the plot of model residuals against fitted values
+```{r}
 
+child_data %>% 
+  modelr::add_residuals(bwt_lm) %>% 
+  ggplot(aes(x = bwt, y = resid)) + geom_violin()
+
+```
 
 
 
