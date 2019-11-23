@@ -65,6 +65,18 @@ cv_df =
   crossv_mc(child_data, 100) 
 
 cv_df %>% pull(train) %>% .[[3]] %>% as_tibble
+
+cv_df =
+  cv_df %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
+
+cv_df = 
+  cv_df %>% 
+  mutate(linear_mod  = map(train, ~lm(bwt ~ babysex + bhead + blength + delwt + gaweeks + mrace + parity + smoken, data = child_data)),
+         main_mod = map(train, ~lm(bwt ~ blength + gaweeks, data = child_data)),
+         inter_mod = map(train, ~lm(bwt ~ bhead * blength * babysex, data = child_data)))
 ```
 
 
