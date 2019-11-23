@@ -30,9 +30,26 @@ child_data = read.csv(file = "./data/birthweight.csv") %>%
   
   Fit a linear model 
 ```{r}
-bwt_lm = lm(bwt ~ ., data = child_data)
+bwt_full = lm(bwt ~ ., data = child_data)
+summary(bwt_full)
+```
+
+Let's look at the p-value, at the 0.05 significant level, babysex, bhead, blength, delwt,gaweeks, mrace, parity and smoken are fail to reject the null hypothesis that coefficients are zero. However, an ANOVA test can optimize this model. I decided to test mom's race and parity which have higher p-value compared to others.
+
+```{r, warning=FALSE}
+# ANOVA test
+bwt_lm = lm(bwt ~ babysex + bhead + blength + delwt + gaweeks + mrace + parity + smoken, data = child_data)
+bwt_test = lm(bwt ~ babysex + bhead + blength + delwt + gaweeks + smoken, data = child_data)
+
+anova(bwt_full, bwt_test) %>% 
+  broom::tidy()
+
+```
+Therefore, we reject the null hypothesis. mom's race and parity can be included as predictors. I use bwt_lm as my linear model as the following
+```{r}
 summary(bwt_lm)
 ```
+
 
 
 
