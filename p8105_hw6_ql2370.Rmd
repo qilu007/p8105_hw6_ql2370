@@ -98,6 +98,8 @@ cv_result = cv_df %>%
   ggplot(data = cv_result,aes(x = model, y = rmse)) + geom_violin()
 ```
 
+
+
 ## Problem 2
 ```{r}
 # read in data
@@ -112,5 +114,51 @@ weather_df =
     tmin = tmin / 10,
     tmax = tmax / 10) %>%
   select(name, id, everything())
+```
+
+```{r}
+bootstp_lm = lm(tmax ~ tmin, data = weather_df)
+r_sq = broom::glance(bootstp_lm)[,1]
+
+```
+
+```{r}
+plot_r = weather_df %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::glance)) %>% 
+  select(results) %>% 
+  unnest(results) 
+```
+
+```{r}
+ggplot(data = plot_r, aes(x = r.squared)) + geom_density()
+```
+
+```{r}
+plot_b = weather_df %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(results) %>% 
+  unnest(results) 
+
+even_idx = seq(2,2000,2)
+odd_idx = seq(1,2000,2)
+
+b0_set = data.frame(b0 = plot_b$estimate[odd_idx])
+b1_set = data.frame(b1 = plot_b$estimate[even_idx])
+est_set = b0_set * b1_set 
+
+ggplot(data = est_set, aes(x =b0)) +
+  geom_density() +
+  labs(x = "b0 * b1")
+```
+
+```{r}
+r_CI =  quantile(plot_r$r.squared, probs=c(0.025, 0.975), na.rm=TRUE)
+log_b_CI = quantile(log(est_set$b0), probs=c(0.025, 0.975), na.rm=TRUE)
 ```
 
