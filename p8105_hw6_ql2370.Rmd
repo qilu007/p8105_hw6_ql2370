@@ -124,7 +124,7 @@ r_sq = broom::glance(bootstp_lm)[,1]
 
 ```{r}
 plot_r = weather_df %>% 
-  modelr::bootstrap(n = 1000) %>% 
+  modelr::bootstrap(n = 5000) %>% 
   mutate(
     models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
     results = map(models, broom::glance)) %>% 
@@ -138,27 +138,36 @@ ggplot(data = plot_r, aes(x = r.squared)) + geom_density()
 
 ```{r}
 plot_b = weather_df %>% 
-  modelr::bootstrap(n = 1000) %>% 
+  modelr::bootstrap(n = 5000) %>% 
   mutate(
     models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
     results = map(models, broom::tidy)) %>% 
   select(results) %>% 
   unnest(results) 
 
-even_idx = seq(2,2000,2)
-odd_idx = seq(1,2000,2)
+even_idx = seq(2,5000,2)
+odd_idx = seq(1,5000,2)
 
 b0_set = data.frame(b0 = plot_b$estimate[odd_idx])
 b1_set = data.frame(b1 = plot_b$estimate[even_idx])
-est_set = b0_set * b1_set 
+est_set = log(b0_set * b1_set )
 
 ggplot(data = est_set, aes(x =b0)) +
   geom_density() +
-  labs(x = "b0 * b1")
+  labs(x = "Log(b0 * b1)")
 ```
+
+  
+The plots above show that the distributions of log(b0 times b1) seems like normal after bootstraping samples to analyze the association between tmax and min. R square after bootstraping mainly lays on 0.90 to 0.92, which means the model is real good for statstical standard, but this distribution has a heavy tail extending to low values and a bit of a “shoulder”, features that may be related to the frequency with which large outliers are included in the bootstrap sample.
 
 ```{r}
 r_CI =  quantile(plot_r$r.squared, probs=c(0.025, 0.975), na.rm=TRUE)
-log_b_CI = quantile(log(est_set$b0), probs=c(0.025, 0.975), na.rm=TRUE)
+log_b_CI = quantile(est_set$b0, probs=c(0.025, 0.975), na.rm=TRUE)
+```
+
+
+```{r}
+r_CI
+log_b_CI
 ```
 
